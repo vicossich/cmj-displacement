@@ -219,7 +219,7 @@ def foot_space_displacement_graph(vectors, mean_vector, rightSideLabel='Right', 
 
 
 #############
-def plot_displacement_polar(magnitudes, labels):
+def plot_displacement_polar(magnitudes, labels,group_magnitude):
     """
     Plota um gráfico polar de deslocamento com base nas magnitudes e labels fornecidos.
 
@@ -256,7 +256,27 @@ def plot_displacement_polar(magnitudes, labels):
         mode='markers+text',
 #         text=[f"{label} ({magnitude})" for label, magnitude in zip(labels, magnitudes)],
 #         textposition="middle right",
-        marker=dict(size=10, color='#5CB0FF', opacity=0.4)
+        marker=dict(size=10, color='red', opacity=0.4)
+    ))
+    # 5CB0FF
+    
+    magnitudes_mean = round(np.array(magnitudes).mean(),1)
+    fig.add_trace(go.Scatterpolar(
+      name = "média individual",
+      r = [magnitudes_mean]*360,
+      theta = list(range(360)),
+      mode='lines',
+      line=dict(color='red', width=1)  # Definindo a cor do trace como vermelho
+
+    ))
+
+    fig.add_trace(go.Scatterpolar(
+      name = "média groupo",
+      r = [group_magnitude]*360,
+      theta = list(range(360)),
+      mode='lines',
+      line=dict(color='green', width=1)  # Definindo a cor do trace como vermelho
+
     ))
 
     # Adicionar os rótulos das direções principais fora do círculo
@@ -316,8 +336,6 @@ def plot_displacement_polar(magnitudes, labels):
         autosize=True,
         plot_bgcolor='#f9f9f9'
     )
-
-
     
 
     return fig
@@ -388,7 +406,22 @@ with col3:
     # labels = ['Anterior-Left', 'Posterior-Right', 'Neutral', 'Anterior', 'Right']
     labels = filtered_data['direction'].values
 
-    fig_radar = plot_displacement_polar(magnitudes=magnitudes,labels=labels)
+
+
+    # Assuming 'data' is your DataFrame
+    # Parse the 'mean_vector' column
+    data['mean_vector'] = data['mean_vector'].apply(lambda x: json.loads(x) if isinstance(x, str) else x)
+
+    # Safely extract 'magnitude' and calculate the mean
+    data['magnitude'] = data['mean_vector'].apply(lambda x: x.get('magnitude') if isinstance(x, dict) else None)
+
+    # Calculate the mean of 'magnitude', ignoring NaN values
+    group_magnitude = data['magnitude'].mean().round(1)
+
+    # st.write(group_magnitude)
+    # group_magnitude = 10
+
+    fig_radar = plot_displacement_polar(magnitudes=magnitudes,labels=labels,group_magnitude=group_magnitude)
     st.plotly_chart(fig_radar, use_container_width=True, key="space")
 
 
